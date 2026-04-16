@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>포인트 상점 🎓</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface2: #1a1a26;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0f0f8;
+  --text2: #888899;
+  --text3: #555566;
+  --accent: #7c6fff;
+  --accent2: #a78bfa;
+  --accent-bg: rgba(124,111,255,0.12);
+  --accent-glow: rgba(124,111,255,0.3);
+  --green: #34d399;
+  --green-bg: rgba(52,211,153,0.1);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.1);
+  --amber: #fbbf24;
+  --amber-bg: rgba(251,191,36,0.1);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── VIDEO BACKGROUND ─── */
+.video-bg {
+  position: fixed; inset: 0; z-index: 0;
+  overflow: hidden;
+}
+.video-bg video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0.18;
+}
+.video-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom,
+    rgba(10,10,15,0.7) 0%,
+    rgba(10,10,15,0.5) 40%,
+    rgba(10,10,15,0.85) 100%
+  );
+}
+
+/* ─── LAYOUT ─── */
+.app {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.card {
+  background: rgba(18,18,26,0.85);
+  backdrop-filter: blur(20px);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), 0 0 60px rgba(124,111,255,0.06);
+}
+
+/* ─── LOGIN ─── */
+.login-wrap {
+  width: 100%;
+  max-width: 400px;
+}
+
+.logo-area {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.logo-icon {
+  width: 72px; height: 72px;
+  background: var(--accent-bg);
+  border: 0.5px solid var(--accent-glow);
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 20px;
+  box-shadow: 0 0 30px var(--accent-glow);
+}
+.logo-area h1 {
+  font-size: 26px; font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.logo-area p { font-size: 14px; color: var(--text2); margin-top: 6px; }
+
+.login-card {
+  padding: 28px;
+}
+
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-size: 12px; font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+.field input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 15px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.field input::placeholder { color: var(--text3); }
+
+.error-msg {
+  font-size: 13px; color: var(--red);
+  margin: -8px 0 12px;
+  display: none;
+}
+
+.btn-login {
+  width: 100%; padding: 13px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px var(--accent-glow);
+  margin-top: 8px;
+}
+.btn-login:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn-login:active { transform: translateY(0); }
+
+.login-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 16px;
+  line-height: 1.8;
+}
+
+.loading-spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── MAIN APP (student + admin) ─── */
+.main-wrap {
+  width: 100%;
+  max-width: 520px;
+  display: none;
+}
+.main-wrap.active { display: block; }
+
+.top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 0.5px solid var(--border);
+}
+.top-bar-left { display: flex; align-items: center; gap: 10px; }
+.avatar {
+  width: 36px; height: 36px;
+  background: var(--accent-bg);
+  border: 0.5px solid var(--accent-glow);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: var(--accent2);
+}
+.top-bar .name { font-size: 15px; font-weight: 600; }
+.top-bar .role-badge {
+  font-size: 11px; font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-left: 6px;
+}
+.role-student { background: var(--accent-bg); color: var(--accent2); }
+.role-admin { background: var(--amber-bg); color: var(--amber); }
+
+.logout-btn {
+  font-size: 12px;
+  padding: 6px 14px;
+  background: none;
+  border: 0.5px solid var(--border2);
+  border-radius: 20px;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* tabs */
+.tabs {
+  display: flex;
+  border-bottom: 0.5px solid var(--border);
+  padding: 0 4px;
+}
+.tab {
+  flex: 1;
+  padding: 13px 8px;
+  text-align: center;
+  font-size: 13px; font-weight: 500;
+  color: var(--text2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  letter-spacing: 0.2px;
+}
+.tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
+
+.panel { padding: 20px; display: none; }
+.panel.active { display: block; }
+
+/* ─── POINT BANNER ─── */
+.point-banner {
+  background: linear-gradient(135deg, rgba(124,111,255,0.15) 0%, rgba(167,139,250,0.08) 100%);
+  border: 0.5px solid var(--accent-glow);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.point-banner::before {
+  content: '';
+  position: absolute;
+  width: 150px; height: 150px;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  top: -40px; right: -20px;
+  pointer-events: none;
+}
+.point-banner .label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.point-banner .value { font-size: 48px; font-weight: 700; color: var(--accent2); line-height: 1; }
+.point-banner .suffix { font-size: 20px; color: var(--text2); margin-left: 4px; }
+.point-banner .sub { font-size: 13px; color: var(--text3); margin-top: 8px; }
+
+/* ─── SECTION TITLE ─── */
+.sec-title {
+  font-size: 11px; font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+/* ─── HISTORY ITEM ─── */
+.hist-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.hist-item:last-child { border-bottom: none; }
+.hist-label { font-size: 14px; }
+.hist-date { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.hist-pts { font-size: 15px; font-weight: 600; }
+.hist-pts.plus { color: var(--green); }
+.hist-pts.minus { color: var(--red); }
+
+/* ─── SHOP ITEMS ─── */
+.shop-filter {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.filter-chip {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+  border: 0.5px solid var(--border2);
+  background: none;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.filter-chip.active, .filter-chip:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent-glow);
+  color: var(--accent2);
+}
+
+.shop-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shop-item {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex; align-items: center; gap: 12px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.shop-item:hover { border-color: var(--border2); background: rgba(255,255,255,0.05); }
+.item-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.item-info { flex: 1; }
+.item-name { font-size: 14px; font-weight: 600; }
+.item-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.item-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.item-price { font-size: 13px; font-weight: 700; color: var(--accent2); }
+.item-stock { font-size: 11px; color: var(--text3); }
+
+.btn-buy {
+  padding: 9px 18px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.btn-buy:hover { background: var(--accent2); }
+.btn-buy:disabled {
+  background: rgba(255,255,255,0.05);
+  color: var(--text3);
+  cursor: not-allowed;
+}
+
+/* ─── ADMIN ─── */
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+}
+.stat-card .s-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+.stat-card .s-value { font-size: 22px; font-weight: 700; }
+.stat-card.accent .s-value { color: var(--accent2); }
+.stat-card.green .s-value { color: var(--green); }
+.stat-card.amber .s-value { color: var(--amber); }
+
+.order-card {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.order-card:hover { border-color: var(--border2); }
+.order-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.order-name { font-size: 14px; font-weight: 600; }
+.order-info { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-pending { background: var(--amber-bg); color: var(--amber); }
+.badge-done { background: var(--green-bg); color: var(--green); }
+
+.btn-complete {
+  padding: 6px 14px;
+  font-size: 12px; font-weight: 600;
+  background: var(--green-bg);
+  color: var(--green);
+  border: 0.5px solid rgba(52,211,153,0.3);
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.btn-complete:hover { background: var(--green); color: #000; }
+
+.student-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+.student-row .avatar { flex-shrink: 0; }
+.student-row .info { flex: 1; }
+.student-row .sname { font-size: 14px; font-weight: 600; }
+.student-row .sid { font-size: 12px; color: var(--text3); }
+.student-row .pts { font-size: 16px; font-weight: 700; color: var(--accent2); }
+
+.give-form {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 20px;
+}
+.give-form h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: var(--text2); }
+.give-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: end;
+}
+.give-row select, .give-row input {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+}
+.give-row select option { background: #1a1a26; }
+.btn-give {
+  padding: 10px 18px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.btn-give:hover { background: var(--accent2); }
+
+/* ─── MODAL ─── */
+.modal-wrap {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-wrap.open { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 28px;
+  width: 100%; max-width: 380px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.modal-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+.modal-box p { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 22px; }
+.modal-btns { display: flex; gap: 10px; }
+.btn-cancel {
+  flex: 1; padding: 11px;
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+}
+.btn-cancel:hover { background: rgba(255,255,255,0.08); }
+.btn-confirm {
+  flex: 1; padding: 11px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.btn-confirm:hover { background: var(--accent2); }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed;
+  bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(16px);
+  border: 0.5px solid var(--border2);
+  color: var(--text);
+  padding: 12px 22px;
+  border-radius: 30px;
+  font-size: 13px; font-weight: 500;
+  z-index: 200;
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── LOADER ─── */
+.sync-status {
+  font-size: 12px;
+  color: var(--text3);
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 12px;
+}
+.dot-pulse {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.empty { font-size: 13px; color: var(--text3); padding: 16px 0; }
+
+/* ─── SETUP GUIDE ─── */
+.setup-guide {
+  background: var(--amber-bg);
+  border: 0.5px solid rgba(251,191,36,0.3);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.setup-guide summary {
+  font-size: 13px; font-weight: 600; color: var(--amber);
+  cursor: pointer; outline: none;
+  list-style: none;
+}
+.setup-guide summary::before { content: '⚙️ '; }
+.setup-guide .guide-body {
+  font-size: 12px; color: var(--text2);
+  margin-top: 12px; line-height: 1.8;
+}
+.setup-guide code {
+  background: rgba(0,0,0,0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--accent2);
+}
+.setup-guide .step {
+  display: flex; gap: 8px;
+  margin-bottom: 8px;
+}
+.step-num {
+  width: 20px; height: 20px;
+  background: var(--amber-bg);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: var(--amber);
+  flex-shrink: 0; margin-top: 1px;
+}
+
+/* scroll */
+.scroll-area { max-height: 400px; overflow-y: auto; }
+.scroll-area::-webkit-scrollbar { width: 4px; }
+.scroll-area::-webkit-scrollbar-track { background: transparent; }
+.scroll-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.item-cat-snack { background: rgba(251,191,36,0.12); }
+.item-cat-privilege { background: rgba(124,111,255,0.12); }
+.item-cat-goods { background: rgba(52,211,153,0.1); }
+
+@media (max-width: 480px) {
+  .give-row { grid-template-columns: 1fr; }
+  .admin-stat-grid { grid-template-columns: repeat(2,1fr); }
+}
+
+/* fade in */
+.fadein { animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<!-- VIDEO BACKGROUND -->
+<div class="video-bg">
+  <video id="bgVideo" autoplay muted loop playsinline>
+    <!-- 동영상 파일 경로를 여기에 지정하세요 -->
+    <source src="video/background.mp4" type="video/mp4">
+    <source src="video/background.webm" type="video/webm">
+  </video>
+</div>
+
+<div class="app">
+
+  <!-- ─── LOGIN ─── -->
+  <div class="login-wrap" id="loginWrap">
+    <div class="logo-area">
+      <div class="logo-icon">🎓</div>
+      <h1>포인트 상점</h1>
+      <p>학생 포인트 관리 시스템</p>
+    </div>
+    <div class="card login-card">
+      <div class="field">
+        <label>아이디</label>
+        <input type="text" id="loginId" placeholder="학생 아이디 입력" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" id="loginPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <p class="error-msg" id="loginErr">아이디 또는 비밀번호가 올바르지 않습니다.</p>
+      <button class="btn-login" id="loginBtn" onclick="doLogin()">로그인</button>
+    </div>
+    <p class="login-hint">
+      관리자: <strong>admin</strong> / admin1234<br>
+      학생 예시: <strong>student1</strong> / pass1234
+    </p>
+  </div>
+
+  <!-- ─── STUDENT ─── -->
+  <div class="main-wrap card" id="studentWrap">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="avatar" id="sAvatar"></div>
+        <div>
+          <span class="name" id="sName"></span>
+          <span class="role-badge role-student">학생</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="sync-status"><div class="dot-pulse"></div>실시간 연동</div>
+        <button class="logout-btn" onclick="logout()">로그아웃</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="sTab('home',this)">홈</div>
+      <div class="tab" onclick="sTab('shop',this)">상점</div>
+      <div class="tab" onclick="sTab('history',this)">포인트 내역</div>
+    </div>
+
+    <!-- home -->
+    <div class="panel active fadein" id="s-home">
+      <div class="point-banner">
+        <div class="label">내 포인트</div>
+        <div class="value"><span id="sPoints">0</span><span class="suffix">P</span></div>
+        <div class="sub">상점에서 원하는 아이템을 구매하세요!</div>
+      </div>
+      <div class="sec-title">최근 구매 내역</div>
+      <div id="sRecentList" class="scroll-area"></div>
+    </div>
+
+    <!-- shop -->
+    <div class="panel fadein" id="s-shop">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:13px;color:var(--text2)">보유 포인트 <strong style="color:var(--accent2)" id="shopPts">0</strong> P</div>
+      </div>
+      <div class="shop-filter" id="shopFilter"></div>
+      <div class="shop-grid scroll-area" id="shopList"></div>
+    </div>
+
+    <!-- history -->
+    <div class="panel fadein" id="s-history">
+      <div class="sec-title">전체 포인트 내역</div>
+      <div id="sHistList" class="scroll-area"></div>
+    </div>
+  </div>
+
+  <!-- ─── ADMIN ─── -->
+  <div class="main-wrap card" id="adminWrap" style="max-width:600px">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="avatar" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.3);color:var(--amber)">A</div>
+        <div>
+          <span class="name">관리자</span>
+          <span class="role-badge role-admin">Admin</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="sync-status"><div class="dot-pulse"></div>Google Sheets</div>
+        <button class="logout-btn" onclick="logout()">로그아웃</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="aTab('orders',this)">주문 목록</div>
+      <div class="tab" onclick="aTab('students',this)">학생 관리</div>
+      <div class="tab" onclick="aTab('shop',this)">상점 관리</div>
+    </div>
+
+    <!-- orders -->
+    <div class="panel active fadein" id="a-orders">
+      <div class="admin-stat-grid" id="adminStats"></div>
+      <div class="sec-title">대기 중인 주문</div>
+      <div id="pendingOrders" class="scroll-area"></div>
+      <div class="sec-title" style="margin-top:18px">완료된 주문</div>
+      <div id="doneOrders" class="scroll-area"></div>
+    </div>
+
+    <!-- students -->
+    <div class="panel fadein" id="a-students">
+      <div class="give-form">
+        <h3>포인트 지급</h3>
+        <div class="give-row">
+          <select id="giveStudent"></select>
+          <input type="number" id="giveAmt" placeholder="포인트" min="1">
+          <button class="btn-give" onclick="givePoints()">지급</button>
+        </div>
+      </div>
+      <div class="sec-title">학생 목록</div>
+      <div id="studentList" class="scroll-area"></div>
+    </div>
+
+    <!-- shop mgmt -->
+    <div class="panel fadein" id="a-shop">
+      <details class="setup-guide">
+        <summary>Google Apps Script 연동 설정</summary>
+        <div class="guide-body">
+          <div class="step"><div class="step-num">1</div><div>스프레드시트 열기 → <strong>확장 프로그램</strong> → <strong>Apps Script</strong></div></div>
+          <div class="step"><div class="step-num">2</div><div>아래 코드 파일 <code>apps-script.gs</code>의 내용을 붙여넣기</div></div>
+          <div class="step"><div class="step-num">3</div><div><strong>배포</strong> → <strong>새 배포</strong> → 유형: 웹 앱, 액세스: 모든 사용자</div></div>
+          <div class="step"><div class="step-num">4</div><div>배포 URL을 복사해 아래 설정란에 붙여넣기</div></div>
+        </div>
+      </details>
+      <div class="field" style="margin-bottom:12px">
+        <label>Apps Script 웹앱 URL</label>
+        <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/..." style="background:rgba(255,255,255,0.04);border:0.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--text);font-family:inherit;outline:none;width:100%">
+      </div>
+      <button class="btn-buy" style="margin-bottom:20px;width:100%" onclick="saveScriptUrl()">URL 저장 및 연동 테스트</button>
+      <div class="sec-title">상점 아이템 관리</div>
+      <div id="adminShopList" class="scroll-area"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-wrap" id="modalWrap">
+  <div class="modal-box">
+    <h3 id="modalTitle"></h3>
+    <p id="modalBody"></p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">취소</button>
+      <button class="btn-confirm" id="modalConfirm">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIG — Apps Script URL을 로컬스토리지에서 불러옴
+// ═══════════════════════════════════════════════════════════════
+let SCRIPT_URL = localStorage.getItem('scriptUrl') || '';
+
+// ═══════════════════════════════════════════════════════════════
+//  LOCAL DATA (Google Sheets 연동 전 기본 데이터)
+// ═══════════════════════════════════════════════════════════════
+let DATA = {
+  students: [
+    {id:'student1', pw:'pass1234', name:'김민준', points:350, history:[
+      {type:'earn',label:'퀴즈 1등',points:100,date:'2025-04-08'},
+      {type:'earn',label:'수업 참여',points:50,date:'2025-04-10'},
+      {type:'spend',label:'포카칩 스낵',points:-30,date:'2025-04-12'}
+    ]},
+    {id:'student2', pw:'pass1234', name:'이서연', points:520, history:[
+      {type:'earn',label:'발표 우수',points:150,date:'2025-04-07'},
+      {type:'earn',label:'수업 참여',points:50,date:'2025-04-10'}
+    ]},
+    {id:'student3', pw:'pass1234', name:'박도현', points:180, history:[
+      {type:'earn',label:'수업 참여',points:50,date:'2025-04-10'},
+      {type:'spend',label:'자리 선택권',points:-80,date:'2025-04-09'}
+    ]},
+    {id:'student4', pw:'pass1234', name:'최수아', points:290, history:[
+      {type:'earn',label:'퀴즈 2등',points:80,date:'2025-04-08'}
+    ]}
+  ],
+  items: [
+    {id:1, name:'포카칩 스낵', desc:'맛있는 과자 1봉지', price:30, icon:'🍟', stock:20, cat:'간식'},
+    {id:2, name:'초코파이', desc:'달콤한 초코파이', price:25, icon:'🍫', stock:15, cat:'간식'},
+    {id:3, name:'음료수', desc:'시원한 음료수 1캔', price:40, icon:'🥤', stock:10, cat:'간식'},
+    {id:4, name:'숙제 면제권', desc:'숙제 1회 제출 면제', price:150, icon:'📝', stock:5, cat:'특권'},
+    {id:5, name:'자리 선택권', desc:'원하는 자리 1회 선택', price:80, icon:'💺', stock:8, cat:'특권'},
+    {id:6, name:'수업 도우미 배지', desc:'일주일 도우미 자격', price:100, icon:'⭐', stock:3, cat:'특권'},
+    {id:7, name:'문구 세트', desc:'예쁜 문구 세트', price:200, icon:'✏️', stock:7, cat:'상품'},
+    {id:8, name:'독서 교환권', desc:'도서관 추가 대출 1회', price:60, icon:'📚', stock:12, cat:'상품'}
+  ],
+  orders: []
+};
+
+let currentUser = null;
+let pendingAction = null;
+let activeShopCat = '전체';
+
+// ═══════════════════════════════════════════════════════════════
+//  GOOGLE SHEETS API CALLS
+// ═══════════════════════════════════════════════════════════════
+async function sheetsCall(action, payload={}) {
+  if (!SCRIPT_URL) return null;
+  try {
+    const url = SCRIPT_URL + '?action=' + action + '&data=' + encodeURIComponent(JSON.stringify(payload));
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const json = await r.json();
+    return json;
+  } catch(e) { return null; }
+}
+
+async function syncFromSheets() {
+  const res = await sheetsCall('getAll');
+  if (!res || res.error) return;
+  if (res.students) DATA.students = res.students;
+  if (res.items) DATA.items = res.items;
+  if (res.orders) DATA.orders = res.orders;
+}
+
+async function pushOrderToSheets(order) {
+  await sheetsCall('addOrder', order);
+}
+
+async function pushPointsToSheets(studentId, points, reason) {
+  await sheetsCall('updatePoints', {id: studentId, points, reason});
+}
+
+async function completeOrderInSheets(orderId) {
+  await sheetsCall('completeOrder', {id: orderId});
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════════════
+async function doLogin() {
+  const id = document.getElementById('loginId').value.trim();
+  const pw = document.getElementById('loginPw').value.trim();
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginErr');
+  err.style.display = 'none';
+
+  btn.innerHTML = '<span class="loading-spinner"></span>';
+  btn.disabled = true;
+
+  // Sync from sheets first
+  await syncFromSheets();
+
+  await new Promise(r => setTimeout(r, 600));
+
+  if (id === 'admin' && pw === 'admin1234') {
+    currentUser = {role:'admin'};
+    show('loginWrap', false);
+    show('adminWrap', true);
+    renderAdmin();
+    btn.innerHTML = '로그인';
+    btn.disabled = false;
+    return;
+  }
+
+  const student = DATA.students.find(s => s.id === id && s.pw === pw);
+  if (student) {
+    currentUser = {role:'student', data: student};
+    show('loginWrap', false);
+    show('studentWrap', true);
+    renderStudent();
+  } else {
+    err.style.display = 'block';
+  }
+  btn.innerHTML = '로그인';
+  btn.disabled = false;
+}
+
+function logout() {
+  currentUser = null;
+  show('studentWrap', false);
+  show('adminWrap', false);
+  show('loginWrap', true);
+  document.getElementById('loginId').value = '';
+  document.getElementById('loginPw').value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STUDENT RENDER
+// ═══════════════════════════════════════════════════════════════
+function renderStudent() {
+  const s = currentUser.data;
+  document.getElementById('sAvatar').textContent = s.name[0];
+  document.getElementById('sName').textContent = s.name;
+  document.getElementById('sPoints').textContent = s.points.toLocaleString();
+  document.getElementById('shopPts').textContent = s.points.toLocaleString();
+  renderRecentHome();
+  renderShop();
+  renderHistory();
+}
+
+function renderRecentHome() {
+  const purchases = currentUser.data.history.filter(h => h.type === 'spend').slice(-3).reverse();
+  const el = document.getElementById('sRecentList');
+  if (!purchases.length) { el.innerHTML = '<p class="empty">아직 구매 내역이 없습니다.</p>'; return; }
+  el.innerHTML = purchases.map(h => histItem(h)).join('');
+}
+
+function renderShop() {
+  const cats = ['전체', ...new Set(DATA.items.map(i => i.cat))];
+  document.getElementById('shopFilter').innerHTML = cats.map(c =>
+    `<button class="filter-chip ${c===activeShopCat?'active':''}" onclick="filterShop('${c}',this)">${c}</button>`
+  ).join('');
+  const items = activeShopCat === '전체' ? DATA.items : DATA.items.filter(i => i.cat === activeShopCat);
+  const s = currentUser.data;
+  document.getElementById('shopList').innerHTML = items.map(item => {
+    const catClass = item.cat === '간식' ? 'item-cat-snack' : item.cat === '특권' ? 'item-cat-privilege' : 'item-cat-goods';
+    const cantBuy = s.points < item.price || item.stock === 0;
+    return `
+    <div class="shop-item">
+      <div class="item-icon ${catClass}">${item.icon}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+        <div class="item-meta">
+          <span class="item-price">${item.price.toLocaleString()} P</span>
+          <span class="item-stock">재고 ${item.stock}개</span>
+        </div>
+      </div>
+      <button class="btn-buy" onclick="tryBuy(${item.id})" ${cantBuy?'disabled':''}>
+        ${item.stock===0?'품절':s.points<item.price?'포인트 부족':'구매'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function filterShop(cat, btn) {
+  activeShopCat = cat;
+  renderShop();
+}
+
+function renderHistory() {
+  const hist = [...currentUser.data.history].reverse();
+  const el = document.getElementById('sHistList');
+  if (!hist.length) { el.innerHTML = '<p class="empty">내역이 없습니다.</p>'; return; }
+  el.innerHTML = hist.map(h => histItem(h)).join('');
+}
+
+function histItem(h) {
+  const isPlus = h.type === 'earn';
+  return `<div class="hist-item">
+    <div>
+      <div class="hist-label">${h.label}</div>
+      <div class="hist-date">${h.date}</div>
+    </div>
+    <div class="hist-pts ${isPlus?'plus':'minus'}">${isPlus?'+':''}${h.points.toLocaleString()} P</div>
+  </div>`;
+}
+
+function sTab(id, el) {
+  document.querySelectorAll('#studentWrap .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#studentWrap .panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  if (id === 'shop') renderShop();
+  if (id === 'history') renderHistory();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BUY FLOW
+// ═══════════════════════════════════════════════════════════════
+function tryBuy(itemId) {
+  const item = DATA.items.find(i => i.id === itemId);
+  pendingAction = {type:'buy', item};
+  document.getElementById('modalTitle').textContent = '구매 확인';
+  document.getElementById('modalBody').innerHTML =
+    `<strong>${item.name}</strong>을(를) <strong style="color:var(--accent2)">${item.price.toLocaleString()}P</strong>로 구매할까요?`;
+  document.getElementById('modalConfirm').onclick = confirmBuy;
+  document.getElementById('modalWrap').classList.add('open');
+}
+
+async function confirmBuy() {
+  closeModal();
+  const item = pendingAction.item;
+  const s = currentUser.data;
+  s.points -= item.price;
+  item.stock--;
+  const today = new Date().toISOString().slice(0,10);
+  s.history.push({type:'spend', label:item.name, points:-item.price, date:today});
+  const order = {
+    id: Date.now(),
+    studentId: s.id,
+    student: s.name,
+    item: item.name,
+    price: item.price,
+    date: today,
+    status: 'pending'
+  };
+  DATA.orders.unshift(order);
+  await pushOrderToSheets(order);
+  renderStudent();
+  toast(`✅ ${item.name} 구매 완료! 관리자에게 요청이 전달되었습니다.`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADMIN RENDER
+// ═══════════════════════════════════════════════════════════════
+function renderAdmin() {
+  renderAdminStats();
+  renderOrders();
+  renderStudentList();
+  renderAdminShop();
+  document.getElementById('scriptUrl').value = SCRIPT_URL;
+  populateGiveSelect();
+}
+
+function renderAdminStats() {
+  const pending = DATA.orders.filter(o => o.status === 'pending').length;
+  const total = DATA.orders.length;
+  const totalStudents = DATA.students.length;
+  document.getElementById('adminStats').innerHTML = `
+    <div class="stat-card accent"><div class="s-label">총 학생</div><div class="s-value">${totalStudents}명</div></div>
+    <div class="stat-card amber"><div class="s-label">대기 주문</div><div class="s-value">${pending}건</div></div>
+    <div class="stat-card green"><div class="s-label">총 주문</div><div class="s-value">${total}건</div></div>
+  `;
+}
+
+function renderOrders() {
+  const pending = DATA.orders.filter(o => o.status === 'pending');
+  const done = DATA.orders.filter(o => o.status === 'done');
+  const pEl = document.getElementById('pendingOrders');
+  const dEl = document.getElementById('doneOrders');
+  pEl.innerHTML = !pending.length ? '<p class="empty">대기 중인 주문이 없습니다.</p>' :
+    pending.map(o => orderCard(o, true)).join('');
+  dEl.innerHTML = !done.length ? '<p class="empty">완료된 주문이 없습니다.</p>' :
+    done.slice(0,10).map(o => orderCard(o, false)).join('');
+  renderAdminStats();
+}
+
+function orderCard(o, isPending) {
+  return `<div class="order-card" style="${!isPending?'opacity:0.6':''}">
+    <div class="order-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="order-name">${o.student}</div>
+        <span class="badge ${isPending?'badge-pending':'badge-done'}">${isPending?'대기':'완료'}</span>
+      </div>
+      ${isPending ? `<button class="btn-complete" onclick="completeOrder(${o.id})">처리 완료</button>` : ''}
+    </div>
+    <div class="order-info">
+      <strong>${o.item}</strong> — ${o.price.toLocaleString()}P<br>
+      신청일: ${o.date}
+    </div>
+  </div>`;
+}
+
+async function completeOrder(id) {
+  const o = DATA.orders.find(x => x.id === id);
+  if (o) {
+    o.status = 'done';
+    renderOrders();
+    await completeOrderInSheets(id);
+    toast('✅ 주문 처리 완료!');
+  }
+}
+
+function renderStudentList() {
+  document.getElementById('studentList').innerHTML = DATA.students.map(s => `
+    <div class="student-row">
+      <div class="avatar">${s.name[0]}</div>
+      <div class="info">
+        <div class="sname">${s.name}</div>
+        <div class="sid">@${s.id}</div>
+      </div>
+      <div class="pts">${s.points.toLocaleString()} P</div>
+    </div>`).join('');
+  populateGiveSelect();
+}
+
+function populateGiveSelect() {
+  document.getElementById('giveStudent').innerHTML =
+    DATA.students.map(s => `<option value="${s.id}">${s.name} (${s.points}P)</option>`).join('');
+}
+
+async function givePoints() {
+  const sid = document.getElementById('giveStudent').value;
+  const amt = parseInt(document.getElementById('giveAmt').value);
+  if (!amt || amt < 1) { toast('유효한 포인트를 입력하세요.'); return; }
+  const s = DATA.students.find(x => x.id === sid);
+  s.points += amt;
+  const today = new Date().toISOString().slice(0,10);
+  s.history.push({type:'earn', label:'관리자 지급', points:amt, date:today});
+  document.getElementById('giveAmt').value = '';
+  renderStudentList();
+  await pushPointsToSheets(sid, amt, '관리자 지급');
+  toast(`✅ ${s.name}에게 ${amt}P 지급 완료!`);
+}
+
+function renderAdminShop() {
+  document.getElementById('adminShopList').innerHTML = DATA.items.map(item => `
+    <div class="shop-item">
+      <div class="item-icon ${item.cat==='간식'?'item-cat-snack':item.cat==='특권'?'item-cat-privilege':'item-cat-goods'}">${item.icon}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.price}P · 재고 ${item.stock}개</div>
+      </div>
+      <button class="btn-buy" onclick="restock(${item.id})">+5 보충</button>
+    </div>`).join('');
+}
+
+function restock(id) {
+  const item = DATA.items.find(i => i.id === id);
+  item.stock += 5;
+  renderAdminShop();
+  toast(`📦 ${item.name} 재고 +5!`);
+}
+
+function saveScriptUrl() {
+  const url = document.getElementById('scriptUrl').value.trim();
+  SCRIPT_URL = url;
+  localStorage.setItem('scriptUrl', url);
+  toast('🔗 URL 저장됨. 연동 테스트 중...');
+  syncFromSheets().then(()=>toast('✅ Google Sheets 연동 성공!'));
+}
+
+function aTab(id, el) {
+  document.querySelectorAll('#adminWrap .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#adminWrap .panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('a-'+id).classList.add('active');
+  if (id === 'orders') renderOrders();
+  if (id === 'students') renderStudentList();
+  if (id === 'shop') renderAdminShop();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════════
+function show(id, visible) {
+  const el = document.getElementById(id);
+  el.style.display = visible ? 'block' : 'none';
+  if (visible) el.classList.add('fadein');
+}
+
+function closeModal() { document.getElementById('modalWrap').classList.remove('open'); }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Sync every 30s when admin is logged in
+setInterval(() => {
+  if (currentUser?.role === 'admin') {
+    syncFromSheets().then(() => { renderOrders(); renderStudentList(); });
+  }
+}, 30000);
+
+// Show login on start
+show('loginWrap', true);
+show('studentWrap', false);
+show('adminWrap', false);
+</script>
+</body>
+</html>
